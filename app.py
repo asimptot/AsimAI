@@ -105,15 +105,19 @@ def transcribe_image():
             return jsonify({"error": "No image file provided"}), 400
 
         image_file = request.files["image"]
-        image_data = image_file.read()
+        image_path = os.path.join("temp", image_file.filename)
+        image_file.save(image_path)
 
-        response = client.chat.completions.create(
-            model=g4f.models.gemini_pro,
-            messages=[{"role": "user", "content": "Can you transcribe this image? "}],
-            image=image_data,
-        )
+        with open(image_path, "rb") as file:
+            response = client.chat.completions.create(
+                model=g4f.models.gemini_pro,
+                messages=[{"role": "user", "content": "Can you transcribe this image? "}],
+                image=file,
+            )
 
         analysis_result = response.choices[0].message.content
+
+        os.remove(image_path)
 
         return jsonify({"transcribe": analysis_result})
     except Exception as e:
