@@ -1,41 +1,843 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Zorlu AI</title>
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="styles.css">
-</head>
-<body>
-    <div class="loading">
-        <p>Loading, please wait...</p>
-    </div>
-    <div class="container">
-        <div class="tabs">
-            <div class="tab active-tab" onclick="switchTab(0)">Interactive Chat</div>
-            <div class="tab" onclick="switchTab(1)">Grammar Check</div>
-            <div class="tab" onclick="switchTab(2)">Translation</div>
-            <div class="tab" onclick="switchTab(3)">Image Generation</div>
-            <div class="tab" onclick="switchTab(4)">Image Transcription</div>
-            <div class="tab" onclick="switchTab(5)">Bug Description Improvement</div>
-            <div class="tab" onclick="switchTab(6)">Add Test Cases</div>
-            <div class="tab" onclick="switchTab(7)">Process Requirements and Code</div>
-            <div class="tab" onclick="switchTab(8)">How to Reply</div>
-            <div class="tab" onclick="switchTab(9)">Venue Recommendation</div>
-            <div class="tab" onclick="switchTab(10)">Trip Planner</div>
-        </div>
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Zorlu AI</title>
+        <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet" />
+        <style>
+            * {
+                margin: 0;
+                padding: 0;
+                box-sizing: border-box;
+            }
+            body {
+                font-family: "Roboto", sans-serif;
+                background-color: #f4f4f9;
+                color: #333;
+                margin: 0;
+                padding: 0;
+                display: flex;
+                justify-content: center;
+                min-height: 100vh;
+                width: 100vw;
+            }
+            .container {
+                display: flex;
+                width: 100%;
+                padding: 20px;
+            }
+            .tabs {
+                display: flex;
+                flex-direction: column;
+                justify-content: flex-start;
+                margin-bottom: 20px;
+                border-right: 2px solid #ddd;
+                width: 200px;
+                padding: 10px 0;
+            }
+            .tab {
+                padding: 15px 10px;
+                cursor: pointer;
+                font-weight: 500;
+                transition: background-color 0.3s;
+                text-align: left;
+                width: 100%;
+            }
+            .tab:hover {
+                background-color: #f1f1f1;
+            }
+            .active-tab {
+                background-color: #4caf50;
+                color: white;
+            }
+            .content {
+                display: none;
+                flex: 1;
+                margin-left: 20px;
+            }
+            .active-content {
+                display: block;
+            }
 
-        <div class="content active-content">
-            <div class="form-section">
-                <label for="chatInput">Enter message for the assistant:</label>
-                <textarea id="chatInput" name="message" required placeholder="Type your message here..."></textarea>
-                <button type="button" onclick="startChat()">Start Chat</button>
-                <div id="chatBox" class="chat-box" readonly></div>
+            .form-section {
+                margin-bottom: 30px;
+                display: flex;
+                flex-direction: column;
+                width: 100%;
+            }
+            label {
+                font-weight: 500;
+                color: #555;
+                margin-bottom: 8px;
+            }
+            input,
+            select,
+            textarea {
+                padding: 12px;
+                font-size: 16px;
+                border: 1px solid #ddd;
+                border-radius: 4px;
+                transition: border-color 0.3s;
+                width: 100%;
+                height: auto;
+                box-sizing: border-box;
+            }
+            textarea {
+                min-height: 250px;
+                resize: vertical;
+            }
+            button {
+                padding: 12px 20px;
+                background-color: #4caf50;
+                color: white;
+                border: none;
+                border-radius: 4px;
+                font-size: 16px;
+                cursor: pointer;
+                width: auto;
+                transition: background-color 0.3s;
+            }
+            button:hover {
+                background-color: #45a049;
+            }
+            .output {
+                margin-top: 20px;
+                padding: 15px;
+                background-color: #f1f1f1;
+                border: 1px solid #ddd;
+                border-radius: 4px;
+                font-size: 16px;
+                color: #333;
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                flex-wrap: wrap;
+                width: 100%;
+            }
+            .copy-button {
+                padding: 8px 15px;
+                background-color: #4caf50;
+                color: white;
+                border: none;
+                border-radius: 4px;
+                cursor: pointer;
+                font-size: 14px;
+                transition: background-color 0.3s;
+            }
+            .copy-button:hover {
+                background-color: #45a049;
+            }
+            .separator {
+                margin: 30px 0;
+                border-top: 2px solid #ddd;
+            }
+            .chat-box {
+                width: 100%;
+                height: 1200px;
+                border: 1px solid #ddd;
+                padding: 10px;
+                font-size: 16px;
+                background-color: #f9f9f9;
+                color: #333;
+                border-radius: 4px;
+                resize: vertical;
+                overflow-y: auto;
+                white-space: pre-wrap;
+                text-align: left;
+                font-family: "Roboto", sans-serif;
+                word-wrap: break-word;
+            }
+
+            .chat-box .user,
+            .chat-box .bot {
+                font-weight: bold;
+                color: #2c2c2c;
+            }
+            @media (max-width: 600px) {
+                .container {
+                    flex-direction: column;
+                    padding: 10px;
+                }
+                .tabs {
+                    flex-direction: column;
+                    border-right: none;
+                    border-bottom: 2px solid #ddd;
+                    width: 100%;
+                }
+                .tab {
+                    width: 100%;
+                    text-align: center;
+                }
+                .content {
+                    margin-left: 0;
+                    margin-top: 10px;
+                }
+                .chat-box {
+                    height: 300px;
+                }
+                textarea {
+                    min-height: 150px;
+                }
+            }
+            .loading {
+                display: none;
+                position: fixed;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                background-color: rgba(255, 255, 255, 0.8);
+                border: 1px solid #ddd;
+                border-radius: 4px;
+                padding: 20px;
+                z-index: 1000;
+            }
+            .loading p {
+                margin: 0;
+                font-size: 16px;
+                color: #333;
+            }
+        </style>
+        <script>
+            let activeTab = 0;
+
+			function switchTab(tabIndex) {
+				activeTab = tabIndex;
+				document.querySelectorAll(".tab").forEach((tab, index) => {
+					tab.classList.remove("active-tab");
+					if (index === activeTab) {
+						tab.classList.add("active-tab");
+					}
+				});
+
+				document.querySelectorAll(".content").forEach((content, index) => {
+					content.classList.remove("active-content");
+					if (index === activeTab) {
+						content.classList.add("active-content");
+					}
+				});
+			}
+
+            function showLoading() {
+                document.querySelector(".loading").style.display = "block";
+            }
+
+            function hideLoading() {
+                document.querySelector(".loading").style.display = "none";
+            }
+
+            function copyToClipboard(elementId) {
+                const textToCopy = document.getElementById(elementId).innerText;
+                const tempTextArea = document.createElement("textarea");
+                tempTextArea.value = textToCopy;
+                document.body.appendChild(tempTextArea);
+                tempTextArea.select();
+                document.execCommand("copy");
+                document.body.removeChild(tempTextArea);
+                showCopyAlert();
+            }
+
+            function showCopyAlert() {
+                const alertBox = document.createElement("div");
+                alertBox.innerText = "Copied!";
+                alertBox.style.position = "fixed";
+                alertBox.style.bottom = "20px";
+                alertBox.style.right = "20px";
+                alertBox.style.backgroundColor = "#4caf50";
+                alertBox.style.color = "white";
+                alertBox.style.padding = "10px";
+                alertBox.style.borderRadius = "5px";
+                alertBox.style.zIndex = "1000";
+                alertBox.style.transition = "opacity 0.5s ease-in-out";
+                alertBox.style.opacity = "1";
+                document.body.appendChild(alertBox);
+                setTimeout(() => {
+                    alertBox.style.opacity = "0";
+                    setTimeout(() => {
+                        document.body.removeChild(alertBox);
+                    }, 500);
+                }, 2000);
+            }
+
+            async function checkGrammar() {
+                showLoading();
+                const inputText = document.getElementById("grammarInput").value;
+                const response = await fetch("/check-grammar", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/x-www-form-urlencoded",
+                    },
+                    body: new URLSearchParams({ text: inputText }),
+                });
+                hideLoading();
+                if (response.ok) {
+                    const data = await response.json();
+                    document.getElementById("grammarOutput").innerText = data.corrected_text || "Error";
+                } else {
+                    document.getElementById("grammarOutput").innerText = "An error occurred.";
+                }
+            }
+
+            async function checkTranslation() {
+                showLoading();
+                const inputText = document.getElementById("translationInput").value;
+                const targetLanguage = document.getElementById("languageInput").value;
+                const response = await fetch("/translate", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/x-www-form-urlencoded",
+                    },
+                    body: new URLSearchParams({ text: inputText, language: targetLanguage }),
+                });
+                hideLoading();
+                if (response.ok) {
+                    const data = await response.json();
+                    document.getElementById("translationOutput").innerText = data.translated_text || "Error";
+                } else {
+                    document.getElementById("translationOutput").innerText = "An error occurred.";
+                }
+            }
+
+            async function generateImage() {
+                showLoading();
+                const inputText = document.getElementById("imageInput").value;
+                const response = await fetch("/generate-image", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/x-www-form-urlencoded",
+                    },
+                    body: new URLSearchParams({ prompt: inputText }),
+                });
+                hideLoading();
+                if (response.ok) {
+                    const data = await response.json();
+                    const imageUrlMatch = data.image_url.match(/!\[.*?\]\((.*?)\)/);
+                    const imageUrl = imageUrlMatch ? imageUrlMatch[1] : null;
+
+                    if (imageUrl) {
+                        document.getElementById("imageOutput").innerHTML = `<img src="${imageUrl}" alt="Generated Image" style="width:100%;"/>`;
+                    } else {
+                        document.getElementById("imageOutput").innerText = "Image URL not found.";
+                    }
+                } else {
+                    document.getElementById("imageOutput").innerText = "An error occurred.";
+                }
+            }
+
+            async function transcribeImage() {
+                showLoading();
+                const formData = new FormData();
+                const fileInput = document.getElementById("imageFileInput");
+                formData.append("image", fileInput.files[0]);
+                const response = await fetch("/transcribe-image", {
+                    method: "POST",
+                    body: formData,
+                });
+                hideLoading();
+                if (response.ok) {
+                    const data = await response.json();
+                    document.getElementById("imageTranscriptionOutput").innerText = data.transcribe || "Error";
+                } else {
+                    document.getElementById("imageTranscriptionOutput").innerText = "An error occurred.";
+                }
+            }
+
+            async function startChat() {
+                showLoading();
+                const userInput = document.getElementById("chatInput").value;
+                const fileInput = document.getElementById("chatFileInput");
+                const formData = new FormData();
+
+                formData.append("message", userInput);
+                if (fileInput.files.length > 0) {
+                    formData.append("file", fileInput.files[0]);
+                }
+
+                const response = await fetch("/interactive-chat", {
+                    method: "POST",
+                    body: formData,
+                });
+
+                const chatBox = document.getElementById("chatBox");
+                hideLoading();
+                if (response.ok) {
+                    const data = await response.json();
+                    chatBox.innerHTML = `<strong>Bot:</strong> ${data.response}<br><strong>You:</strong> ${userInput}<br><br>` + chatBox.innerHTML;
+                    document.getElementById("chatInput").value = "";
+                    fileInput.value = "";
+                } else {
+                    chatBox.innerHTML = "An error occurred. Please try again.<br><br>" + chatBox.innerHTML;
+                }
+            }
+
+            async function improveBugDescription() {
+                showLoading();
+                const descriptionText = document.getElementById("bugDescriptionInput").value;
+                const response = await fetch("/bug-control", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/x-www-form-urlencoded",
+                    },
+                    body: new URLSearchParams({ description: descriptionText }),
+                });
+                hideLoading();
+                if (response.ok) {
+                    const data = await response.json();
+                    const formattedText = formatBugDescription(data.bug_description);
+
+                    const boldedText = formattedText
+                        .replace(/(Description:)/g, "<strong>$1</strong><br>")
+                        .replace(/(Prerequisites:)/g, "<strong>$1</strong><br>")
+                        .replace(/(Steps to Reproduce:)/g, "<strong>$1</strong><br>")
+                        .replace(/(Expected Result:)/g, "<strong>$1</strong><br>")
+                        .replace(/(Actual Result:)/g, "<strong>$1</strong><br>")
+                        .replace(/(Recovery State:)/g, "<strong>$1</strong><br>")
+                        .replace(/(Reproducibility Rate:)/g, "<strong>$1</strong><br>")
+                        .replace(/(Attachments:)/g, "<strong>$1</strong><br>");
+
+                    const descriptionStartIndex = boldedText.indexOf("<strong>Description:</strong>");
+                    const descriptionPart = boldedText.substring(descriptionStartIndex);
+                    const titleAndPriorityPart = boldedText.substring(0, descriptionStartIndex);
+
+                    document.getElementById("bugDescriptionOutputText").innerHTML = titleAndPriorityPart;
+                    document.getElementById("descriptionOutputText").innerHTML = descriptionPart;
+                } else {
+                    document.getElementById("bugDescriptionOutputText").innerText = "An error occurred.";
+                    document.getElementById("descriptionOutputText").innerText = "";
+                }
+            }
+
+            function formatBugDescription(description) {
+                return description.replace(/\*\*(.*?)\*\*/g, "$1");
+            }
+
+            async function addTestCases() {
+                showLoading();
+                const requirementsText = document.getElementById("requirementsForTCInput").value;
+                const inputText = document.getElementById("tcInput").value;
+                const response = await fetch("/add-testcases", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/x-www-form-urlencoded",
+                    },
+                    body: new URLSearchParams({ requirements: requirementsText, text: inputText }),
+                });
+                hideLoading();
+                if (response.ok) {
+                    const data = await response.json();
+                    const testCases = data.test_cases;
+                    const testCasesBody = document.getElementById("testCasesBody");
+                    testCasesBody.innerHTML = "";
+
+                    const lines = testCases.split("\n");
+                    lines.forEach((line) => {
+                        const columns = line
+                            .split("|")
+                            .map((col) => col.trim())
+                            .filter((col) => col);
+                        if (columns.length > 0) {
+                            const row = document.createElement("tr");
+                            columns.forEach((col) => {
+                                const cell = document.createElement("td");
+                                cell.innerText = col;
+                                row.appendChild(cell);
+                            });
+                            testCasesBody.appendChild(row);
+                        }
+                    });
+                } else {
+                    document.getElementById("tcOutput").innerText = "An error occurred.";
+                }
+            }
+
+            async function howToReply() {
+                showLoading();
+                const inputText = document.getElementById("htrInput").value;
+                const response = await fetch("/how-to-reply", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/x-www-form-urlencoded",
+                    },
+                    body: new URLSearchParams({ text: inputText }),
+                });
+                hideLoading();
+                if (response.ok) {
+                    const data = await response.json();
+                    document.getElementById("htrOutput").innerText = data.Reply || "Error";
+                } else {
+                    document.getElementById("htrOutput").innerText = "An error occurred.";
+                }
+            }
+
+            async function processRequirementsAndCode() {
+                showLoading();
+                const requirements = document.getElementById("requirementsInput").value;
+                const code = document.getElementById("codeInput").value;
+
+                const response = await fetch("/process-requirements-and-code", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/x-www-form-urlencoded",
+                    },
+                    body: new URLSearchParams({ requirements: requirements, code: code }),
+                });
+                hideLoading();
+                if (response.ok) {
+                    const data = await response.json();
+                    document.getElementById("analysisOutput").innerText = data.analysis || "Error";
+                } else {
+                    document.getElementById("analysisOutput").innerText = "An error occurred.";
+                }
+            }
+
+            async function recommendCafe() {
+                showLoading();
+                const zipCode1 = document.getElementById("zipCode1Input").value;
+                const zipCode2 = document.getElementById("zipCode2Input").value;
+                const country1 = document.getElementById("country1Input").value;
+                const country2 = document.getElementById("country2Input").value;
+                const venueType = document.getElementById("venueTypeInput").value;
+
+                const response = await fetch("/recommend-cafe", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/x-www-form-urlencoded",
+                    },
+                    body: new URLSearchParams({
+                        zip_code_1: zipCode1,
+                        zip_code_2: zipCode2,
+                        country_1: country1,
+                        country_2: country2,
+                        venue_type: venueType,
+                    }),
+                });
+                hideLoading();
+                if (response.ok) {
+                    const data = await response.json();
+                    document.getElementById("cafeRecommendationOutput").innerText = data.recommendation || "Error";
+                } else {
+                    document.getElementById("cafeRecommendationOutput").innerText = "An error occurred.";
+                }
+            }
+
+            async function generateTripPlan() {
+                showLoading();
+                const location = document.getElementById("locationInput").value;
+                const startDate = document.getElementById("startDateInput").value;
+                const endDate = document.getElementById("endDateInput").value;
+
+                const response = await fetch("/trip-planner", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/x-www-form-urlencoded",
+                    },
+                    body: new URLSearchParams({
+                        location: location,
+                        start_date: startDate,
+                        end_date: endDate,
+                    }),
+                });
+                hideLoading();
+
+                if (response.ok) {
+                    const data = await response.json();
+                    console.log("Response Data:", data);
+                    const tripPlan = data.trip_plan || "Error";
+
+                    if (!tripPlan || tripPlan.trim() === "") {
+                        document.getElementById("tripPlanOutput").innerText = "No trip plan available.";
+                        return;
+                    }
+
+                    let tableHTML = '<table border="1" style="width: 100%; border-collapse: collapse;">';
+                    tableHTML += "<thead>";
+                    tableHTML += "<tr>";
+                    tableHTML += "<th>Date</th>";
+                    tableHTML += "<th>Activity/Location</th>";
+                    tableHTML += "<th>Description/Notes</th>";
+                    tableHTML += "<th>Dining Options</th>";
+                    tableHTML += "<th>Events/Highlights</th>";
+                    tableHTML += "</tr>";
+                    tableHTML += "</thead>";
+                    tableHTML += "<tbody>";
+
+                    tripPlan.split("\n").forEach((line, index) => {
+                        if (line.trim() === "") return;
+
+                        const columns = line
+                            .split("|")
+                            .map((col) => col.trim())
+                            .filter((col) => col);
+
+                        if (columns.length >= 4) {
+                            tableHTML += "<tr>";
+                            tableHTML += `<td>${columns[0] || ""}</td>`;
+                            tableHTML += `<td>${columns[1] || ""}</td>`;
+                            tableHTML += `<td>${columns[2] || ""}</td>`;
+                            tableHTML += `<td>${columns[3] || ""}</td>`;
+                            tableHTML += `<td>${columns[4] || ""}</td>`;
+                            tableHTML += "</tr>";
+                        }
+                    });
+
+                    tableHTML += "</tbody>";
+                    tableHTML += "</table>";
+
+                    document.getElementById("tripPlanOutput").innerHTML = tableHTML;
+                } else {
+                    document.getElementById("tripPlanOutput").innerText = "An error occurred.";
+                }
+            }
+        </script>
+    </head>
+    <body>
+        <div class="loading">
+            <p>Loading, please wait...</p>
+        </div>
+        <div class="container">
+            <div class="tabs">
+				<div class="tab active-tab" onclick="switchTab(0)">Interactive Chat</div>
+				<div class="tab" onclick="switchTab(1)">Grammar Check</div>
+				<div class="tab" onclick="switchTab(2)">Translation</div>
+				<div class="tab" onclick="switchTab(3)">Image Generation</div>
+				<div class="tab" onclick="switchTab(4)">Image Transcription</div>
+				<div class="tab" onclick="switchTab(5)">Bug Description Improvement</div>
+				<div class="tab" onclick="switchTab(6)">Add Test Cases</div>
+				<div class="tab" onclick="switchTab(7)">Process Requirements and Code</div>
+				<div class="tab" onclick="switchTab(8)">How to Reply</div>
+				<div class="tab" onclick="switchTab(9)">Venue Recommendation</div>
+				<div class="tab" onclick="switchTab(10)">Trip Planner</div>
+			</div>
+
+            <div class="content active-content">
+                <div class="form-section">
+                    <label for="chatInput">Enter message for the assistant:</label>
+                    <textarea id="chatInput" name="message" required placeholder="Type your message here..."></textarea>
+
+                    <label for="chatFileInput">Upload an image or XML file (optional):</label>
+                    <input type="file" id="chatFileInput" accept=".xml, image/*" />
+
+                    <button type="button" onclick="startChat()">Start Chat</button>
+                    <div id="chatBox" class="chat-box" readonly></div>
+                </div>
+            </div>
+			<div class="content">
+                <div class="form-section">
+                    <label for="grammarInput">Enter text for grammar check:</label>
+                    <textarea id="grammarInput" name="text" required placeholder="Type your text here..."></textarea>
+                    <button type="button" onclick="checkGrammar()">Check Grammar</button>
+                    <div class="output">
+                        <p><strong>Corrected Grammar:</strong> <span id="grammarOutput"></span></p>
+                        <button class="copy-button" onclick="copyToClipboard('grammarOutput')">Copy</button>
+                    </div>
+                </div>
+            </div>
+            <div class="content">
+                <div class="form-section">
+                    <label for="translationInput">Enter text for translation:</label>
+                    <textarea id="translationInput" name="text" required placeholder="Type your text here..."></textarea>
+                    <label for="languageInput">Choose target language:</label>
+                    <select id="languageInput">
+                        <option value="English" selected>English</option>
+                        <option value="Spanish">Spanish</option>
+                        <option value="French">French</option>
+                        <option value="German">German</option>
+                        <option value="Italian">Italian</option>
+                        <option value="Dutch">Dutch</option>
+                        <option value="Portuguese">Portuguese</option>
+                        <option value="Russian">Russian</option>
+                        <option value="Chinese">Chinese</option>
+                        <option value="Japanese">Japanese</option>
+                        <option value="Arabic">Arabic</option>
+                        <option value="Turkish">Turkish</option>
+                    </select>
+                    <button type="button" onclick="checkTranslation()">Translate</button>
+                    <div class="output">
+                        <p><strong>Translation:</strong> <span id="translationOutput"></span></p>
+                        <button class="copy-button" onclick="copyToClipboard('translationOutput')">Copy</button>
+                    </div>
+                </div>
+            </div>
+            <div class="content">
+                <div class="form-section">
+                    <label for="imageInput">Enter text for image generation:</label>
+                    <textarea id="imageInput" name="prompt" required placeholder="Describe the image you want..."></textarea>
+                    <button type="button" onclick="generateImage()">Generate Image</button>
+                    <div id="imageOutput"></div>
+                </div>
+            </div>
+            <div class="content">
+                <div class="form-section">
+                    <label for="imageFileInput">Upload an image for transcription:</label>
+                    <input type="file" id="imageFileInput" accept="image/*" />
+                    <button type="button" onclick="transcribeImage()">Transcribe Image</button>
+                    <div class="output">
+                        <p><strong>Transcriptions:</strong> <span id="imageTranscriptionOutput"></span></p>
+                        <button class="copy-button" onclick="copyToClipboard('imageTranscriptionOutput')">Copy</button>
+                    </div>
+                </div>
+            </div>
+            <div class="content">
+                <div class="form-section">
+                    <label for="bugDescriptionInput">Enter bug description:</label>
+                    <textarea id="bugDescriptionInput" name="description" required>
+Description:
+Provide a brief summary of the bug, including its impact and any relevant context.
+
+Prerequisites:
+List any necessary setup or conditions needed before reproducing the bug.
+
+Steps to Reproduce:
+Describe the steps to reproduce the issue.
+Describe the steps to reproduce the issue.
+Continue until the bug is reproduced.
+
+Expected Result:
+Describe what you expected to happen.
+
+Actual Result:
+Describe what actually happened.
+
+Recovery State:
+Explain how to continue using the application after the bug occurs.
+
+Reproducibility Rate:
+Rate the reproducibility on a scale of 1/5 to 5/5, where 1 is rarely reproducible and 5 is always reproducible.
+
+Attachments:
+List any files, screenshots, or logs that are relevant.
+
+                    </textarea>
+                    <button type="button" onclick="improveBugDescription()">Improve Description</button>
+                    <div id="bugDescriptionOutput" class="output">
+                        <pre id="bugDescriptionOutputText"></pre>
+                        <button class="copy-button" onclick="copyToClipboard('bugDescriptionOutputText')">Copy</button>
+                    </div>
+                    <div id="descriptionOutput" class="output">
+                        <pre id="descriptionOutputText"></pre>
+                        <button class="copy-button" onclick="copyToClipboard('descriptionOutputText')">Copy</button>
+                    </div>
+                </div>
+            </div>
+            <div class="content">
+                <div class="form-section">
+                    <label for="requirementsForTCInput">Enter Requirements:</label>
+                    <textarea id="requirementsForTCInput" name="requirements" required placeholder="Type your requirements here..."></textarea>
+
+                    <label for="tcInput">Enter the code:</label>
+                    <textarea id="tcInput" name="text" required placeholder="Paste your code here..."></textarea>
+                    <button type="button" onclick="addTestCases()">Add Test Cases</button>
+                    <div class="output">
+                        <p><strong>Generated Test Cases:</strong></p>
+                        <table id="testCasesTable" border="1">
+                            <thead>
+                                <tr>
+                                    <th>Test Case ID</th>
+                                    <th>Description</th>
+                                    <th>Expected Outcome</th>
+                                </tr>
+                            </thead>
+                            <tbody id="testCasesBody">
+                                <!-- Test case rows will be inserted here -->
+                            </tbody>
+                        </table>
+                        <button class="copy-button" onclick="copyToClipboard('testCasesTable')">Copy</button>
+                    </div>
+                </div>
+            </div>
+            <div class="content">
+                <div class="form-section">
+                    <label for="htrInput">Enter the message:</label>
+                    <textarea id="htrInput" name="text" required placeholder="Input your message here..."></textarea>
+                    <button type="button" onclick="howToReply()">How to Reply</button>
+                    <div class="output">
+                        <p><strong>Generated Message:</strong> <span id="htrOutput"></span></p>
+                        <button class="copy-button" onclick="copyToClipboard('htrOutput')">Copy</button>
+                    </div>
+                </div>
+            </div>
+            <div class="content">
+                <div class="form-section">
+                    <label for="requirementsInput">Enter Requirements:</label>
+                    <textarea id="requirementsInput" name="requirements" required placeholder="Type your requirements here..."></textarea>
+
+                    <label for="codeInput">Enter Code:</label>
+                    <textarea id="codeInput" name="code" required placeholder="Paste your code here..."></textarea>
+
+                    <button type="button" onclick="processRequirementsAndCode()">Analyze</button>
+                    <div class="output">
+                        <p><strong>Analysis Result:</strong> <span id="analysisOutput"></span></p>
+                        <button class="copy-button" onclick="copyToClipboard('analysisOutput')">Copy</button>
+                    </div>
+                </div>
+            </div>
+            <div class="content">
+                <div class="form-section">
+                    <label for="zipCode1Input">Enter first zip code:</label>
+                    <input type="text" id="zipCode1Input" name="zip_code_1" required placeholder="Enter first zip code..." />
+
+                    <label for="zipCode2Input">Enter second zip code:</label>
+                    <input type="text" id="zipCode2Input" name="zip_code_2" required placeholder="Enter second zip code..." />
+
+                    <label for="country1Input">Choose first country:</label>
+                    <select id="country1Input" name="country_1" required>
+                        <option value="Netherlands" selected>Netherlands</option>
+                        <option value="Germany">Germany</option>
+                        <option value="France">France</option>
+                        <option value="Belgium">Belgium</option>
+                        <option value="Italy">Italy</option>
+                        <option value="Spain">Spain</option>
+                        <option value="Turkey">Turkey</option>
+                        <option value="United Kingdom">United Kingdom</option>
+                        <option value="United States">United States</option>
+                    </select>
+
+                    <label for="country2Input">Choose second country:</label>
+                    <select id="country2Input" name="country_2" required>
+                        <option value="Netherlands" selected>Netherlands</option>
+                        <option value="Germany">Germany</option>
+                        <option value="France">France</option>
+                        <option value="Belgium">Belgium</option>
+                        <option value="Italy">Italy</option>
+                        <option value="Spain">Spain</option>
+                        <option value="Turkey">Turkey</option>
+                        <option value="United Kingdom">United Kingdom</option>
+                        <option value="United States">United States</option>
+                    </select>
+
+                    <label for="venueTypeInput">Choose venue type:</label>
+                    <select id="venueTypeInput" name="venue_type">
+                        <option value="cafe" selected>Cafe</option>
+                        <option value="pub">Pub</option>
+                        <option value="hotel">Hotel</option>
+                    </select>
+
+                    <button type="button" onclick="recommendCafe()">Get Recommendation</button>
+                    <div class="output">
+                        <p><strong>Recommendation:</strong> <span id="cafeRecommendationOutput"></span></p>
+                        <button class="copy-button" onclick="copyToClipboard('cafeRecommendationOutput')">Copy</button>
+                    </div>
+                </div>
+            </div>
+            <div class="content">
+                <div class="form-section">
+                    <label for="locationInput">Enter City or Country:</label>
+                    <input type="text" id="locationInput" name="location" required placeholder="Type the city or country..." />
+
+                    <label for="startDateInput">Start Date:</label>
+                    <input type="date" id="startDateInput" name="start_date" required />
+
+                    <label for="endDateInput">End Date:</label>
+                    <input type="date" id="endDateInput" name="end_date" required />
+
+                    <button type="button" onclick="generateTripPlan()">Generate Trip Plan</button>
+                    <div class="output">
+                        <p><strong>Trip Plan:</strong></p>
+                        <div id="tripPlanOutput"></div>
+                        <button class="copy-button" onclick="copyToClipboard('tripPlanOutput')">Copy</button>
+                    </div>
+                </div>
             </div>
         </div>
-        <!-- Diğer içerik bölümleri buraya eklenecek -->
-    </div>
-    <script src="script.js"></script>
-</body>
+    </body>
 </html>
